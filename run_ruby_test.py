@@ -278,6 +278,10 @@ class BaseRubyTask(sublime_plugin.TextCommand):
     def features(self): return super(BaseRubyTask.UnitFile, self).features() + ["run_test"]
     def get_project_root(self): return self.find_project_root()
 
+  class RailsUnitFile(UnitFile):
+    def run_all_tests_command(self): return RubyTestSettings().run_rails_unit_command(relative_path=self.relative_file_path())
+    def run_single_test_command(self, view): return RubyTestSettings().run_single_rails_unit_command(relative_path=self.relative_file_path(), line_number=self.get_current_line_number(view))
+
   class CucumberFile(BaseFile):
     def possible_alternate_files(self): return list( set( [self.file_name.replace(".feature", ".rb"), self.file_name.replace(".feature", "_steps.rb")] ) )
     def run_all_tests_command(self): return RubyTestSettings().run_cucumber_command(relative_path=self.relative_file_path())
@@ -315,12 +319,18 @@ class BaseRubyTask(sublime_plugin.TextCommand):
         return re.sub(os.sep + '.+', "", file_name.replace(folder,"")[1:])
     return default_partition_folder
 
+  def in_rails_app(self, file_name):
+    return os.path.isfile("/".join((os.getcwd(), "config", "application.rb")))
+
   def file_type(self, file_name = None, load_config = True):
     if load_config:
       self.load_config()
     file_name = file_name or self.view.file_name()
     if not file_name: return BaseRubyTask.AnonymousFile()
-    if re.search('\w+\_test.rb', file_name):
+    if re.search('\w+\_test.rb', file_name) and self.in_rails_app(file_name):
+      partition_folder = self.find_partition_folder(file_name, RUBY_UNIT_FOLDER)
+      return BaseRubyTask.RailsUnitFile(file_name, partition_folder)
+    elif re.search('\w+\_test.rb', file_name):
       partition_folder = self.find_partition_folder(file_name, RUBY_UNIT_FOLDER)
       return BaseRubyTask.UnitFile(file_name, partition_folder)
     elif re.search('test\_\w+\.rb', file_name):

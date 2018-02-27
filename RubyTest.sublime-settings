@@ -5,6 +5,9 @@
   "run_ruby_unit_command": "ruby -Itest {relative_path}",
   "run_single_ruby_unit_command": "ruby -Itest {relative_path} -n '{test_name}'",
 
+  "run_rails_unit_command": "rails test {relative_path}",
+  "run_single_rails_unit_command": "rails test {relative_path}:{line_number}",
+
   "run_cucumber_command": "cucumber {relative_path}",
   "run_single_cucumber_command": "cucumber {relative_path} -l{line_number}",
 
